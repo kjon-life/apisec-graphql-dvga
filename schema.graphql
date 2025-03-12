@@ -1,0 +1,101 @@
+directive @show_network(style: String) on FIELD_DEFINITION
+directive @skip(if: Boolean!) on FIELD | FRAGMENT_SPREAD | INLINE_FRAGMENT
+directive @deprecated(reason: String) on FIELD_DEFINITION | ENUM_VALUE
+
+type User {
+  id: ID!
+  username: String
+  password: String
+}
+
+type Paste {
+  id: ID!
+  title: String
+  content: String
+  public: Boolean
+  burn: Boolean
+  user_agent: String
+  ip_addr: String @show_network(style: "decimal")
+  owner: Owner
+}
+
+type Owner {
+  id: ID!
+  name: String
+  pastes: [Paste]
+}
+
+type Audit {
+  id: ID!
+  gqloperation: String
+  gqlquery: String
+  timestamp: String
+}
+
+input UserInput {
+  username: String!
+  email: String!
+  password: String!
+}
+
+type Query {
+  pastes(public: Boolean, limit: Int, filter: String): [Paste]
+  paste(id: Int, title: String): Paste
+  system_update: String
+  system_diagnostics(username: String!, password: String!, cmd: String): String
+  system_debug(arg: String): String
+  system_health: String
+  users(id: Int): [User]
+  read_and_burn(id: Int!): Paste
+  search(keyword: String): [SearchResult]
+  audits: [Audit]
+  delete_all_pastes: Boolean
+  me(token: String!): User
+}
+
+type Mutation {
+  create_paste(title: String!, content: String!, public: Boolean, burn: Boolean): CreatePastePayload
+  edit_paste(id: Int!, title: String, content: String): EditPastePayload
+  delete_paste(id: Int!): DeletePastePayload
+  upload_paste(content: String!, filename: String!): UploadPastePayload
+  import_paste(host: String!, port: Int, path: String!, scheme: String!): ImportPastePayload
+  create_user(user_data: UserInput!): CreateUserPayload
+  login(username: String!, password: String!): LoginPayload
+}
+
+type Subscription {
+  paste(id: Int, title: String): Paste
+}
+
+type CreatePastePayload {
+  paste: Paste
+}
+
+type EditPastePayload {
+  paste: Paste
+}
+
+type DeletePastePayload {
+  result: Boolean
+}
+
+type UploadPastePayload {
+  result: String
+  content: String
+  filename: String
+}
+
+type ImportPastePayload {
+  result: String
+}
+
+type CreateUserPayload {
+  user: User
+}
+
+type LoginPayload {
+  access_token: String
+  refresh_token: String
+}
+
+union SearchResult = Paste | User 

@@ -1,0 +1,27 @@
+[project]
+name = "dvga"
+version = "0.1.0"
+description = "Damn Vulnerable GraphQL Application - An intentionally vulnerable GraphQL implementation"
+requires-python = ">=3.9,<3.10"
+dependencies = [
+    "flask>=2.0.0",
+    "flask-sqlalchemy>=3.0.0",
+    "flask-sockets>=0.2.1",
+    "flask-graphql>=2.0.1",
+    "flask-jwt-extended>=4.5.3",
+    "gevent>=22.10.2",
+    "gevent-websocket>=0.10.1",
+    "graphene>=3.3",
+    "graphene-sqlalchemy>=3.0.0",
+    "rx>=3.2.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.5",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build" 
