@@ -5,7 +5,7 @@ set -e
 APP_NAME="dvga"
 APP_DIR="$HOME/apps/${APP_NAME}"
 VENV_DIR="${APP_DIR}/.venv"
-REPO_URL="git@github.com:kjon-life/apisec-graphql-qa.git"
+REPO_URL="git@github.com:kjon-life/apisec-graphql-dvga.git"
 SERVICE_FILE="/etc/systemd/system/${APP_NAME}.service"
 NGINX_CONF="/etc/nginx/conf.d/${APP_NAME}.conf"
 APP_PORT=9071
@@ -32,6 +32,14 @@ error() {
     exit 1
 }
 
+# Check for required commands
+command -v asdf >/dev/null 2>&1 || error "asdf is required but not installed"
+command -v git >/dev/null 2>&1 || error "git is required but not installed"
+command -v nginx >/dev/null 2>&1 || error "nginx is required but not installed"
+
+# Check if we can connect to GitHub with SSH
+ssh -T git@github.com 2>&1 | grep -q "successfully authenticated" || error "SSH connection to GitHub failed. Please check your SSH keys"
+
 # Create application directory
 log "Creating application directory..."
 mkdir -p "$APP_DIR"
@@ -40,7 +48,9 @@ mkdir -p "$APP_DIR"
 log "Cloning/updating repository..."
 if [ -d "${APP_DIR}/.git" ]; then
     cd "$APP_DIR"
-    git pull
+    git fetch
+    git reset --hard origin/main
+    git clean -fdx
 else
     git clone "$REPO_URL" "$APP_DIR"
 fi
@@ -50,16 +60,19 @@ log "Setting up virtual environment..."
 cd "$APP_DIR"
 # Set up project software versions w asdf
 log "Setting up asdf versions..."
-asdf set python 3.9.21
-asdf set nodejs 23.9.0
-asdf set uv 0.6.6
+asdf set python 3.9.21 || error "Failed to set Python version"
+asdf set nodejs 23.9.0 || error "Failed to set Node.js version"
+asdf set uv 0.6.6 || error "Failed to set uv version"
+
 # create virtual environment
-uv venv
-source "${VENV_DIR}/bin/activate"
+log "Creating virtual environment..."
+rm -rf "${VENV_DIR}"  # Ensure clean venv
+uv venv || error "Failed to create virtual environment"
+source "${VENV_DIR}/bin/activate" || error "Failed to activate virtual environment"
 
 # Install dependencies
 log "Installing dependencies..."
-uv pip install -e .
+uv pip install -e . || error "Failed to install dependencies"
 
 # Initialize database
 log "Initializing database..."
@@ -70,7 +83,7 @@ with app.app_context():
     from core.models import ServerMode
     if not ServerMode.query.first():
         ServerMode.set_mode('easy')
-"
+" || error "Failed to initialize database"
 
 # Create systemd service file (requires sudo)
 log "Setting up systemd service..."

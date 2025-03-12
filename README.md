@@ -1,4 +1,4 @@
-# SpaceX GraphQL Wrapper
+# DVGA API Application
 
 A GraphQL wrapper around the SpaceX REST API, designed for use with APIsec testing.
 
