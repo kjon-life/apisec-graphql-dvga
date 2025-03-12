@@ -106,7 +106,7 @@ class Paste(db.Model):
     size = db.Column(db.Integer)  # Size in bytes
     version = db.Column(db.Integer, default=1)
     file_path = db.Column(db.String(255))  # For file attachments
-    metadata = db.Column(db.Text)  # JSON field for flexible metadata
+    paste_metadata = db.Column(db.Text)  # JSON field for flexible metadata
     
     # Foreign keys
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), index=True)
@@ -127,11 +127,11 @@ class Paste(db.Model):
     
     def set_metadata(self, data):
         """Store additional metadata as JSON"""
-        self.metadata = json.dumps(data)
+        self.paste_metadata = json.dumps(data)
     
     def get_metadata(self):
         """Retrieve metadata as dictionary"""
-        return json.loads(self.metadata) if self.metadata else {}
+        return json.loads(self.paste_metadata) if self.paste_metadata else {}
 
     @classmethod
     def create_paste(cls, title, content, user_id, public=True, burn=False, 
